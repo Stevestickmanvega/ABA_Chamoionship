@@ -1,0 +1,66 @@
+import pygame
+import numpy as np
+import matplotlib.pyplot as plt
+
+class Fighter:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.width = 50
+        self.height = 75
+        self.vel = 5
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+        self.punching = False
+        self.punch_rect = pygame.Rect(self.x + self.width, self.y + (self.height/2), 25, 25)
+
+    def move_left(self):
+        self.x -= self.vel
+
+    def move_right(self):
+        self.x += self.vel
+
+    def punch(self):
+        self.punching = True
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, (255, 0, 0), self.rect)
+        if self.punching:
+            pygame.draw.rect(screen, (0, 0, 255), self.punch_rect)
+
+def get_game_state(fighter1, fighter2):
+    state = np.zeros((3, 3, 3))
+    state[0][0][0] = fighter1.x / 600
+    state[0][0][1] = fighter1.y / 400
+    state[0][0][2] = fighter2.x / 600
+    state[0][1][0] = fighter2.y / 400
+    state[0][1][1] = fighter1.punching
+    state[0][1][2] = fighter2.punching
+    return state
+
+def predict_action(state, model):
+    action = np.argmax(model.predict(state))
+    return action
+
+def update_game_state(fighter1, fighter2, action1, action2):
+    if action1 == 0:
+        fighter1.move_left()
+    elif action1 == 1:
+        fighter1.move_right()
+    elif action1 == 2:
+        fighter1.punch()
+    
+    if action2 == 0:
+        fighter2.move_left()
+    elif action2 == 1:
+        fighter2.move_right()
+    elif action2 == 2:
+        fighter2.punch()
+
+def draw_boxing_ring(screen):
+    pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(50, 50, 500, 300))
+
+def display_score(screen, score1, score2, round_num):
+    font = pygame.font.Font(None, 30)
+    score_text1 = font.render("Fighter 1: " + str(score1), 1, (255, 0, 0))
+    score_text2 = font.render("Fighter 2: " + str(score2), 1, (255, 0, 0))
+    round_text = font.render("Round " + str(round_num), 1, (255, 0, 0))
